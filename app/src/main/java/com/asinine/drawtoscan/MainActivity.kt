@@ -17,12 +17,11 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.util.*
 
 
-abstract class MainActivity : AppCompatActivity(), DrawingView.PathTouchListener {
+class MainActivity : AppCompatActivity(), DrawingView.PathTouchListener {
     lateinit var dv: DrawingView
-    var dataPath: String = ""
+    lateinit var dataPath: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -32,7 +31,7 @@ abstract class MainActivity : AppCompatActivity(), DrawingView.PathTouchListener
     }
 
     fun askPermission() {
-        Dexter.withContext(this@MainActivity)
+        Dexter.withContext(this)
             .withPermissions(
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -42,7 +41,6 @@ abstract class MainActivity : AppCompatActivity(), DrawingView.PathTouchListener
                     report?.let {
                         if (report.areAllPermissionsGranted()) {
                             moveTrainedData()
-
                         }
                     }
                 }
@@ -79,9 +77,6 @@ abstract class MainActivity : AppCompatActivity(), DrawingView.PathTouchListener
 
     @Throws(Exception::class)
     private fun extractText(bitmap: Bitmap): String? {
-        dataPath = getExternalFilesDir(null).toString() + "/tesseract/"
-        val dir = File(dataPath + "tessdata/")
-        if (!dir.exists()) dir.mkdirs()
         val tessBaseApi = TessBaseAPI()
         tessBaseApi.init(dataPath, "eng")
         tessBaseApi.setImage(bitmap)
@@ -91,8 +86,11 @@ abstract class MainActivity : AppCompatActivity(), DrawingView.PathTouchListener
     }
 
     fun moveTrainedData() {
+        dataPath = getExternalFilesDir(null).toString() + "/tesseract/"
+        val dir = File(dataPath + "tessdata/")
+        if (!dir.exists()) dir.mkdirs()
         val inStream: InputStream = resources.openRawResource(R.raw.eng)
-        val out = FileOutputStream(dataPath + "tessdata/")
+        val out = FileOutputStream(dataPath + "tessdata/eng.traineddata")
         val buff = ByteArray(1024)
         var read = 0
 
